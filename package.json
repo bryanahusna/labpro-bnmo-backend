@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "test": "jest -c ./jest.unit.json"
+    "test": "jest -c ./jest.unit.json --runInBand"
   },
   "keywords": [],
   "author": "",

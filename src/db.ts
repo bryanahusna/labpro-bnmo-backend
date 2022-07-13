@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { DataSource } from "typeorm";
 import User from "./models/user";
 
@@ -9,7 +10,5 @@ const AppDataSource = new DataSource({
     entities: [User],
     synchronize: true
 });
-
-AppDataSource.initialize();
 
 export default AppDataSource;

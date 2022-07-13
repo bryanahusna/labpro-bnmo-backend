@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
 import express from 'express';
@@ -8,7 +9,7 @@ import User from '../models/user';
 const router = express.Router();
 const userRepository = AppDataSource.getRepository(User);
 
-router.post('/api/register', async (req, res) => {
+router.post('/', async (req, res) => {
     let user = new User();
     Object.assign(user, req.body);
 
