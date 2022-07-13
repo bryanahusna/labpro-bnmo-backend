@@ -8,9 +8,6 @@ export default class User {
     @Column("varchar", { length: 64 })
     password!: string;
 
-    @Column("varchar", { length: 64 })
-    hash_salt!: string;
-
     @Column()
     foto_ktp!: string;
 
