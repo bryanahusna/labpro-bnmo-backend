@@ -4,6 +4,7 @@ import helmet from "helmet";
 import AppDataSource from './db';
 import register from './routes/register';
 import login from './routes/login';
+import deposit from './routes/deposit';
 
 const app = express();
 AppDataSource.initialize();
@@ -12,6 +13,7 @@ app.use(helmet());
 app.use(json());
 app.use('/api/register', register);
 app.use('/api/login', login);
+app.use('/api/deposit', deposit);
 
 const server = app.listen(3000, () => {
     console.log('Application listening at port 3000');

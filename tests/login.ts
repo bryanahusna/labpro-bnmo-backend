@@ -9,16 +9,16 @@ import AppDataSource from "../src/db";
 
 const userRepository = AppDataSource.getRepository(User);
 
-beforeAll(async () => {
-    await AppDataSource.initialize();
-})
+// beforeAll(async () => {
+//     await AppDataSource.initialize();
+// })
 
-afterAll(async () => {
-    await server.close();
-    await AppDataSource.destroy();
-});
+// afterAll(async () => {
+//     await server.close();
+//     //await AppDataSource.destroy();
+// });
 
-describe('Login', () => {
+export default function login_test(){
     
     const login: any = {};
     const validLogin = {
@@ -78,6 +78,4 @@ describe('Login', () => {
         const tokenDecoded: any = jwt.decode(res.text);
         expect(tokenDecoded).toBeFalsy();
     });
-
-    
-});
+}

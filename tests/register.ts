@@ -7,17 +7,7 @@ import User from "../src/models/user";
 
 const userRepository = AppDataSource.getRepository(User);
 
-beforeAll(async () => {
-    await AppDataSource.initialize();
-});
-
-afterAll(async () => {
-    server.close();
-    await AppDataSource.destroy();
-});
-
-
-describe('Registration', () => {
+export default function register_test(){
     // Reset request data to valid one before each test case
     // Each test case can modify it to create invalid one
     let data: any = {};
@@ -94,4 +84,4 @@ describe('Registration', () => {
         res = await request(server).post('/api/register').send(data);
         expect(res.statusCode).toBe(200);
     });
-});
+}
