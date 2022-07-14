@@ -1,8 +1,9 @@
 import express, { json } from 'express';
 import helmet from "helmet";
-import config from './config';
+
 import AppDataSource from './db';
 import register from './routes/register';
+import login from './routes/login';
 
 const app = express();
 AppDataSource.initialize();
@@ -10,14 +11,10 @@ AppDataSource.initialize();
 app.use(helmet());
 app.use(json());
 app.use('/api/register', register);
-
-app.post('/api/login', (req, res) => {
-    return res.send('OK');
-});
+app.use('/api/login', login);
 
 const server = app.listen(3000, () => {
     console.log('Application listening at port 3000');
-    console.log(config.get('DB_PASSWORD'));
 });
 
 // Make sure database connection destroyed when server is closed

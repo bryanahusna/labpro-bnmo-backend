@@ -1,17 +1,9 @@
 import "reflect-metadata";
-import { server } from "../src/app";
 import request from "supertest";
-import { DataSource } from "typeorm";
-import User from "../src/models/user";
 
-const AppDataSource = new DataSource({
-    type: "mysql",
-    username: "root",
-    password: process.env.DB_PASSWORD,
-    database: "bnmo_test",
-    entities: [User],
-    synchronize: true
-});
+import { server } from "../src/app";
+import AppDataSource from "../src/db";
+import User from "../src/models/user";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -51,6 +43,7 @@ describe('Registration', () => {
         expect(user.name).toBe(data.name);
         expect(user.foto_ktp).toBeTruthy();
         expect(user.password).not.toBe(data.password);
+        expect(user.is_admin).toBe(false);
 
         const userDb = await userRepository.findOneBy({
             username: 'a'
@@ -60,6 +53,7 @@ describe('Registration', () => {
         expect(userDb?.name).toBe(data.name);
         expect(userDb?.foto_ktp).toBeTruthy();
         expect(userDb?.password).not.toBe(data.password);
+        expect(userDb?.is_admin).toBe(false);
     });
 
     it('should return 400 status code if the registration data is incomplete', async () => {

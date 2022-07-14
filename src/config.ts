@@ -12,7 +12,8 @@ for(const property in configJson){
     config.set(property, configJson[property]);
 }
 for(const property in process.env){
-    config.set(property, configJson[property]);
+    config.set(property, process.env[property]);
 }
+
 
 export default config;

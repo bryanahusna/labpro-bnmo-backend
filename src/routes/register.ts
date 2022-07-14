@@ -28,6 +28,7 @@ router.post('/', async (req, res) => {
     const hash_salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, hash_salt);
 
+    user.is_admin = false;
     user = await userRepository.save(user);
     
     return res.send(user);
