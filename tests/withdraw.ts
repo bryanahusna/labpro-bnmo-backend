@@ -4,12 +4,12 @@ import { server } from "../src/app";
 import request from "supertest";
 import AppDataSource from "../src/db";
 import User from "../src/models/user";
-import Deposit from "../src/models/deposit";
+import Withdrawal from "../src/models/withdrawal";
 
 const userRepository = AppDataSource.getRepository(User);
-const depositRepository = AppDataSource.getRepository(Deposit);
+const withdrawalRepository = AppDataSource.getRepository(Withdrawal);
 
-export default function deposit_test(){
+export default function withdraw_test(){
     let token: string;
     let validToken: string;
     const validLogin = {
@@ -35,32 +35,32 @@ export default function deposit_test(){
         await userRepository.delete({});
     });
     
-    it('should return deposit transaction if valid amount and auth token is given', async () => {
+    it('should return withdrawal transaction if valid amount and auth token is given', async () => {
         const res = await request(server)
-                            .post('/api/deposit')
+                            .post('/api/withdraw')
                             .set('x-auth-token', validToken)
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(200);
 
-        let deposit = res.body as Deposit;
-        expect(deposit.id).toBeTruthy();
-        expect(deposit.username).toBe(validLogin.username);
-        expect(deposit.amount == 10).toBe(true);
-        expect(deposit.request_on).toBeTruthy();
-        expect(deposit.is_approved).toBe(false);
+        let withdrawal = res.body as Withdrawal;
+        expect(withdrawal.id).toBeTruthy();
+        expect(withdrawal.username).toBe(validLogin.username);
+        expect(withdrawal.amount == 10).toBe(true);
+        expect(withdrawal.request_on).toBeTruthy();
+        expect(withdrawal.is_approved).toBe(false);
 
-        deposit = await depositRepository.findOneBy({ username: validLogin.username }) as Deposit;
-        expect(deposit).toBeTruthy();
-        expect(deposit.id).toBeTruthy();
-        expect(deposit.username).toBe(validLogin.username);
-        expect(deposit.amount == 10).toBe(true);
-        expect(deposit.request_on).toBeTruthy();
-        expect(deposit.is_approved).toBe(false);
+        withdrawal = await withdrawalRepository.findOneBy({ username: validLogin.username }) as Withdrawal;
+        expect(withdrawal).toBeTruthy();
+        expect(withdrawal.id).toBeTruthy();
+        expect(withdrawal.username).toBe(validLogin.username);
+        expect(withdrawal.amount == 10).toBe(true);
+        expect(withdrawal.request_on).toBeTruthy();
+        expect(withdrawal.is_approved).toBe(false);
     });
 
     it('should return 401 status code if no token is provided', async () => {
         const res = await request(server)
-                            .post('/api/deposit')
+                            .post('/api/withdraw')
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(401);
 
@@ -69,7 +69,7 @@ export default function deposit_test(){
 
     it('should return 400 status code if no amount is provided', async () => {
         const res = await request(server)
-                            .post('/api/deposit')
+                            .post('/api/withdraw')
                             .set('x-auth-token', validToken)
                             .send();
         expect(res.statusCode).toBe(400);
@@ -79,7 +79,7 @@ export default function deposit_test(){
 
     it('should return 400 status code if amount is invalid (negative)', async () => {
         const res = await request(server)
-                            .post('/api/deposit')
+                            .post('/api/withdraw')
                             .set('x-auth-token', validToken)
                             .send({ amount: -1 });
         expect(res.statusCode).toBe(400);

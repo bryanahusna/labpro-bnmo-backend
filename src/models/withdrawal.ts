@@ -17,6 +17,6 @@ export default class Withdrawal {
     @Column("datetime", { default: () => "NOW()" })
     request_on!: string;
 
-    @Column("datetime")
+    @Column("datetime", { default: null })
     approved_on!: string;
 }
