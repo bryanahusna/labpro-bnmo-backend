@@ -32,6 +32,7 @@ export default function deposit_test(){
         token = validToken;
     });
     afterAll(async () => {
+        await depositRepository.delete({});
         await userRepository.delete({});
     });
     

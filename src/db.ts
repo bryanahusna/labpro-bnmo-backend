@@ -1,17 +1,17 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
-import config from "./config";
+import appconfig from "./appconfig";
 import Deposit from "./models/deposit";
+import Transfer from "./models/transfer";
 import User from "./models/user";
 import Withdrawal from "./models/withdrawal";
 
 const AppDataSource = new DataSource({
     type: "mysql",
     username: "root",
-    password: config.get("DB_PASSWORD"),
+    password: appconfig.get("DB_PASSWORD"),
     database: "bnmo_test",
-    entities: [User, Deposit, Withdrawal],
-    synchronize: true
+    entities: [User, Deposit, Withdrawal, Transfer],
 });
 
 export default AppDataSource;

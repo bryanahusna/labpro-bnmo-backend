@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm"
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
+import User from "./user";
 
 @Entity()
 export default class Transfer {
@@ -11,9 +12,9 @@ export default class Transfer {
     @Column("datetime", { default: () => "NOW()" })
     completed_on!: string;
 
-    @Column()
-    from_user!: string;
+    @ManyToOne(() => User, (from_user) => from_user.out_transfers)
+    from_user!: User;
 
-    @Column()
-    to_user!: string;
+    @ManyToOne(() => User, (to_user) => to_user.in_transfers)
+    to_user!: User;
 }

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryColumn } from "typeorm"
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm"
+import Transfer from "./transfer";
 
 @Entity()
 export default class User {
@@ -22,4 +23,10 @@ export default class User {
 
     @Column({ default: false })
     is_admin!: boolean;
+
+    @OneToMany(() => Transfer, (transfer) => transfer.from_user)
+    out_transfers!: Transfer[];
+
+    @OneToMany(() => Transfer, (transfer) => transfer.to_user)
+    in_transfers!: Transfer[];
 }

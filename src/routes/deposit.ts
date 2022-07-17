@@ -1,7 +1,7 @@
 import express from 'express';
 import Joi from 'joi';
 import jwt from 'jsonwebtoken';
-import config from '../config';
+import appconfig from '../appconfig';
 
 import AppDataSource from '../db';
 import Deposit from '../models/deposit';
@@ -12,7 +12,11 @@ const depositRepository = AppDataSource.getRepository(Deposit);
 router.post('/', async (req, res) => {
     const token = req.header('x-auth-token') || '';
     if(!token) return res.status(401).send('Not logged in');
-    if(!jwt.verify(token, config.get('JWT_PRIVATEKEY'))) return res.status(401).send('Invalid login');
+    try{
+        if(!jwt.verify(token, appconfig.get('JWT_PRIVATEKEY'))) return res.status(401).send('Invalid login');
+    } catch(err){   // if jwt malformed
+        return res.status(401).send('Invalid login');
+    }
 
     const tokenContent: any = jwt.decode(token);
 

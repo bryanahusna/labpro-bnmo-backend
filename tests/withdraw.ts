@@ -32,6 +32,7 @@ export default function withdraw_test(){
         token = validToken;
     });
     afterAll(async () => {
+        await withdrawalRepository.delete({});
         await userRepository.delete({});
     });
     

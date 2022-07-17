@@ -3,7 +3,7 @@ import Joi from 'joi';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
-import config from '../config';
+import appconfig from '../appconfig';
 import AppDataSource from "../db";
 import User from "../models/user";
 
@@ -27,7 +27,7 @@ router.post('/', async (req, res) => {
     const token = jwt.sign({
         username: req.body.username,
         is_admin: false
-    }, config.get('JWT_PRIVATEKEY'));
+    }, appconfig.get('JWT_PRIVATEKEY'));
     
     return res.send(token);
 });
