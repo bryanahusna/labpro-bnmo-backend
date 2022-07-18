@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 
 import appconfig from '../appconfig';
 import AppDataSource from '../db';
+import JWTContent from '../models/JWTContent';
 import Transfer from '../models/transfer';
 import User from '../models/user';
 
@@ -13,15 +14,7 @@ const transferRepository = AppDataSource.getRepository(Transfer);
 const userRepository = AppDataSource.getRepository(User);
 
 router.post('/', async (req, res) => {
-    const token = req.header('x-auth-token') || '';
-    if(!token) return res.status(401).send('Not logged in');
-    try{
-        if(!jwt.verify(token, appconfig.get('JWT_PRIVATEKEY') || '')) return res.status(401).send('Invalid login');
-    } catch(err){   // if jwt malformed
-        return res.status(401).send('Invalid login');
-    }
-
-    const tokenContent: any = jwt.decode(token);
+    let jwtcontent: JWTContent = res.locals.jwtcontent;
 
     const schema = Joi.object({
         amount: Joi.number().positive().required(),
@@ -33,13 +26,25 @@ router.post('/', async (req, res) => {
     let to_user = await userRepository.findOneBy({ username: req.body.to_user });
     if(!to_user) return res.status(404).send('Invalid transfer destination\' username');
 
+    let from_user = await userRepository.findOneBy({ username: jwtcontent.username });
+    if(!from_user) return res.status(404).send('Invalid transfer sender\' username');
+
     let transfer = new Transfer();
-    transfer.from_user = tokenContent.username;
-    transfer.to_user = req.body.to_user;
+    transfer.from_user = from_user;
+    transfer.to_user = to_user;
     transfer.amount = req.body.amount;
     
+    from_user.balance -= transfer.amount;
+    to_user.balance += transfer.amount;
+    
     try{
-        transfer = await transferRepository.save(transfer);
+        await AppDataSource.transaction(async (TEM) => {
+            await TEM.save(from_user);
+            await TEM.save(to_user);
+            transfer = await TEM.save(transfer);
+        });
+        transfer.from_user.password = '';
+        transfer.to_user.password = '';
         return res.send(transfer);
     } catch(err){
         return res.status(404).send('An unknown error occured');

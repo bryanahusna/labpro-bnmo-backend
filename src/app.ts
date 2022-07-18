@@ -1,6 +1,5 @@
 import express, { json } from 'express';
 import helmet from 'helmet';
-import jwt from 'jsonwebtoken';
 
 import AppDataSource from './db';
 import register from './routes/register';
@@ -9,6 +8,7 @@ import deposit from './routes/deposit';
 import withdraw from './routes/withdraw';
 import transfer from './routes/transfer';
 import approve from './routes/approve';
+import auth from './middlewares/auth';
 
 const app = express();
 AppDataSource.initialize();
@@ -17,10 +17,10 @@ app.use(helmet());
 app.use(json());
 app.use('/api/register', register);
 app.use('/api/login', login);
-app.use('/api/deposit', deposit);
-app.use('/api/withdraw', withdraw);
-app.use('/api/transfer', transfer);
-app.use('/api/approve', approve);
+app.use('/api/deposit', auth, deposit);
+app.use('/api/withdraw', auth, withdraw);
+app.use('/api/transfer', auth, transfer);
+app.use('/api/approve', auth, approve);
 
 const server = app.listen(3000, () => {
     console.log('Application listening at port 3000');

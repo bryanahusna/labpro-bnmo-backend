@@ -47,7 +47,7 @@ export default function transfer_test(){
         res = await request(server).post('/api/login').send(user2Login);
         validToken2 = res.text;
     });
-    beforeEach(() => {
+    beforeEach(async () => {
         token1 = validToken1;
         token2 = validToken2;
     });
@@ -56,18 +56,22 @@ export default function transfer_test(){
         await userRepository.delete({});
     });
     
-    it('should return transfer transaction if valid amount, destination user, and auth token is provided', async () => {
+    it('should update both users balance and return transfer transaction if valid amount, destination user, and auth token is provided', async () => {
+        await userRepository.update({ username: user1Login.username }, { balance: 100 });
+        await userRepository.update({ username: user2Login.username }, { balance: 100 });
+
         const res = await request(server)
                             .post('/api/transfer')
                             .set('x-auth-token', validToken1)
                             .send({ amount: 10, to_user: user2Login.username });
+        if(res.statusCode == 400) console.log(res.text);
         expect(res.statusCode).toBe(200);
 
         let transfer = res.body as Transfer;
         
         expect(transfer.id).toBeTruthy();
-        expect(transfer.from_user).toBe(user1Login.username);
-        expect(transfer.to_user).toBe(user2Login.username);
+        expect(transfer.from_user.username).toBe(user1Login.username);
+        expect(transfer.to_user.username).toBe(user2Login.username);
         expect(transfer.amount == 10).toBe(true);
         expect(transfer.completed_on).toBeTruthy();
 
@@ -85,7 +89,9 @@ export default function transfer_test(){
         expect(transfer).toBeTruthy();
         expect(transfer.id).toBeTruthy();
         expect(transfer.from_user.username).toBe(user1Login.username);
+        expect(transfer.from_user.balance).toBe(90);
         expect(transfer.to_user.username).toBe(user2Login.username);
+        expect(transfer.to_user.balance).toBe(110);
         expect(transfer.amount == 10).toBe(true);
         expect(transfer.completed_on).toBeTruthy();
     });
