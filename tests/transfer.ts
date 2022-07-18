@@ -64,7 +64,6 @@ export default function transfer_test(){
         expect(res.statusCode).toBe(200);
 
         let transfer = res.body as Transfer;
-        //console.log(res.body);
         
         expect(transfer.id).toBeTruthy();
         expect(transfer.from_user).toBe(user1Login.username);
@@ -83,7 +82,6 @@ export default function transfer_test(){
             }
         }) as Transfer;
 
-        console.log(transfer);
         expect(transfer).toBeTruthy();
         expect(transfer.id).toBeTruthy();
         expect(transfer.from_user.username).toBe(user1Login.username);

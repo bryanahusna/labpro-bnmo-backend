@@ -26,8 +26,8 @@ router.post('/', async (req, res) => {
 
     const token = jwt.sign({
         username: req.body.username,
-        is_admin: false
-    }, appconfig.get('JWT_PRIVATEKEY'));
+        is_admin: user.is_admin
+    }, appconfig.get('JWT_PRIVATEKEY') || '');
     
     return res.send(token);
 });

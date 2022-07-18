@@ -10,7 +10,7 @@ export default class Transfer {
     amount!: number;
 
     @Column("datetime", { default: () => "NOW()" })
-    completed_on!: string;
+    completed_on!: Date;
 
     @ManyToOne(() => User, (from_user) => from_user.out_transfers)
     from_user!: User;

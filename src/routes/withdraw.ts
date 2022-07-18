@@ -13,7 +13,7 @@ router.post('/', async (req, res) => {
     const token = req.header('x-auth-token') || '';
     if(!token) return res.status(401).send('Not logged in');
     try{
-        if(!jwt.verify(token, appconfig.get('JWT_PRIVATEKEY'))) return res.status(401).send('Invalid login');
+        if(!jwt.verify(token, appconfig.get('JWT_PRIVATEKEY') || '')) return res.status(401).send('Invalid login');
     } catch(err){   // if jwt malformed
         return res.status(401).send('Invalid login');
     }

@@ -15,7 +15,13 @@ export default class User {
     @Column()
     name!: string;
 
-    @Column("bigint", { default: 0 })
+    @Column("bigint", {
+        default: 0,
+        transformer: {  // somehow the number is retrieved as a string so a transformer is needed
+            from: (value) => parseInt(value),
+            to: (value) => value
+        }
+    })
     balance!: number;
 
     @Column({ default: false })

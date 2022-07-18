@@ -8,15 +8,21 @@ export default class Withdrawal {
     @Column()
     username!: string;
 
-    @Column("bigint")
+    @Column({
+        type: 'bigint',
+        transformer: {
+            from: (value) => parseInt(value),
+            to: (value) => value
+        }
+    })  // somehow the number retrieved as a string so a transformer is needed
     amount!: number;
 
     @Column({ default: false })
     is_approved!: boolean;
 
     @Column("datetime", { default: () => "NOW()" })
-    request_on!: string;
+    request_on!: Date;
 
     @Column("datetime", { default: null })
-    approved_on!: string;
+    approved_on!: Date;
 }
