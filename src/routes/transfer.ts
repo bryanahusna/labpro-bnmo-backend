@@ -1,12 +1,10 @@
 import express from 'express';
 import Joi from 'joi';
-import jwt from 'jsonwebtoken';
 
-import appconfig from '../appconfig';
 import AppDataSource from '../db';
 import JWTContent from '../models/JWTContent';
-import Transfer from '../models/transfer';
-import User from '../models/user';
+import Transfer from '../models/db/transfer';
+import User from '../models/db/user';
 
 const router = express.Router();
 

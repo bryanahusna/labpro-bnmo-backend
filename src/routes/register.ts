@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 
 import AppDataSource from '../db';
-import User from '../models/user';
+import User from '../models/db/user';
 
 const router = express.Router();
 const userRepository = AppDataSource.getRepository(User);

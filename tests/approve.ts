@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken';
 import { server } from "../src/app";
 import request from "supertest";
 import AppDataSource from "../src/db";
-import User from "../src/models/user";
-import Deposit from "../src/models/deposit";
-import Withdrawal from "../src/models/withdrawal";
+import User from "../src/models/db/user";
+import Deposit from "../src/models/db/deposit";
+import Withdrawal from "../src/models/db/withdrawal";
 import { TransactionType } from "../src/models/transaction";
 
 const userRepository = AppDataSource.getRepository(User);

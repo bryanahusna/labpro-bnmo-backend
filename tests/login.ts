@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import { server } from "../src/app";
 import request from "supertest";
 import { DataSource } from "typeorm";
-import User from "../src/models/user";
+import User from "../src/models/db/user";
 import AppDataSource from "../src/db";
 
 const userRepository = AppDataSource.getRepository(User);

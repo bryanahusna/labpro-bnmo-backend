@@ -3,7 +3,7 @@ import request from "supertest";
 
 import { server } from "../src/app";
 import AppDataSource from "../src/db";
-import User from "../src/models/user";
+import User from "../src/models/db/user";
 
 const userRepository = AppDataSource.getRepository(User);
 

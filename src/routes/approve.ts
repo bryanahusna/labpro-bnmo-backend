@@ -1,14 +1,12 @@
 import express from 'express';
 import Joi from 'joi';
-import jwt from 'jsonwebtoken';
 
-import appconfig from '../appconfig';
 import AppDataSource from '../db';
-import Deposit from '../models/deposit';
+import Deposit from '../models/db/deposit';
 import JWTContent from '../models/JWTContent';
 import { TransactionType } from '../models/transaction';
-import User from '../models/user';
-import Withdrawal from '../models/withdrawal';
+import User from '../models/db/user';
+import Withdrawal from '../models/db/withdrawal';
 
 const router = express.Router();
 

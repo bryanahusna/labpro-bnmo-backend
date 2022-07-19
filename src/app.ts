@@ -8,11 +8,14 @@ import deposit from './routes/deposit';
 import withdraw from './routes/withdraw';
 import transfer from './routes/transfer';
 import approve from './routes/approve';
+import verify from './routes/verify';
+
 import auth from './middlewares/auth';
 
 const app = express();
-AppDataSource.initialize();
+AppDataSource.initialize(); //  initialize database connection
 
+// Middlewares
 app.use(helmet());
 app.use(json());
 app.use('/api/register', register);
@@ -21,6 +24,8 @@ app.use('/api/deposit', auth, deposit);
 app.use('/api/withdraw', auth, withdraw);
 app.use('/api/transfer', auth, transfer);
 app.use('/api/approve', auth, approve);
+app.use('/api/verify', auth, verify);
+
 
 const server = app.listen(3000, () => {
     console.log('Application listening at port 3000');
@@ -34,4 +39,3 @@ server.on('close', () => {
 });
 
 export { server };
-

@@ -3,8 +3,8 @@ import "reflect-metadata";
 import { server } from "../src/app";
 import request from "supertest";
 import AppDataSource from "../src/db";
-import User from "../src/models/user";
-import Deposit from "../src/models/deposit";
+import User from "../src/models/db/user";
+import Deposit from "../src/models/db/deposit";
 
 const userRepository = AppDataSource.getRepository(User);
 const depositRepository = AppDataSource.getRepository(Deposit);
