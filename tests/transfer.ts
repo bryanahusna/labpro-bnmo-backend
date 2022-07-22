@@ -5,8 +5,10 @@ import request from "supertest";
 import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import Transfer from "../src/models/db/transfer";
+import Transaction from "../src/models/db/transaction";
 
 const userRepository = AppDataSource.getRepository(User);
+const transactionRepository = AppDataSource.getRepository(Transaction);
 const transferRepository = AppDataSource.getRepository(Transfer);
 
 export default function transfer_test(){
@@ -53,6 +55,7 @@ export default function transfer_test(){
     });
     afterAll(async () => {
         await transferRepository.delete({});
+        await transactionRepository.delete({});
         await userRepository.delete({});
     });
     
@@ -69,31 +72,31 @@ export default function transfer_test(){
 
         let transfer = res.body as Transfer;
         
-        expect(transfer.id).toBeTruthy();
-        expect(transfer.from_user.username).toBe(user1Login.username);
+        expect(transfer.transactionId).toBeTruthy();
+        expect(transfer.transaction.user.username).toBe(user1Login.username);
         expect(transfer.to_user.username).toBe(user2Login.username);
-        expect(transfer.amount == 10).toBe(true);
-        expect(transfer.completed_on).toBeTruthy();
+        expect(transfer.transaction.amount).toBe(10);
+        expect(transfer.transaction.made_on).toBeTruthy();
 
         transfer = await transferRepository.findOne({
             where: {
-                from_user: {
-                    username: user1Login.username
-                }
+                transactionId: transfer.transactionId
             }, relations: {
-                from_user: true,
+                transaction: {
+                    user: true
+                },
                 to_user: true
             }
         }) as Transfer;
 
         expect(transfer).toBeTruthy();
-        expect(transfer.id).toBeTruthy();
-        expect(transfer.from_user.username).toBe(user1Login.username);
-        expect(transfer.from_user.balance).toBe(90);
+        expect(transfer.transactionId).toBeTruthy();
+        expect(transfer.transaction.user.username).toBe(user1Login.username);
+        expect(transfer.transaction.user.balance).toBe(90);
         expect(transfer.to_user.username).toBe(user2Login.username);
         expect(transfer.to_user.balance).toBe(110);
-        expect(transfer.amount == 10).toBe(true);
-        expect(transfer.completed_on).toBeTruthy();
+        expect(transfer.transaction.amount).toBe(10);
+        expect(transfer.transaction.made_on).toBeTruthy();
     });
 
     it('should return 401 status code if no token is provided', async () => {
@@ -102,7 +105,7 @@ export default function transfer_test(){
                             .send({ amount: 10, to_user: user2Login.username });
         expect(res.statusCode).toBe(401);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 401 status code if invalid token is provided', async () => {
@@ -112,7 +115,7 @@ export default function transfer_test(){
                             .send({ amount: 10, to_user: user2Login.username });
         expect(res.statusCode).toBe(401);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if no amount and/or to_user is provided', async () => {
@@ -121,21 +124,21 @@ export default function transfer_test(){
                             .set('x-auth-token', validToken1)
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(400);
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
 
         res = await request(server)
                             .post('/api/transfer')
                             .set('x-auth-token', validToken1)
                             .send({ to_user: user2Login.username });
         expect(res.statusCode).toBe(400);
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
 
         res = await request(server)
                             .post('/api/transfer')
                             .set('x-auth-token', validToken1)
                             .send({});
         expect(res.statusCode).toBe(400);
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if amount is invalid (negative)', async () => {
@@ -144,7 +147,7 @@ export default function transfer_test(){
                             .set('x-auth-token', validToken1)
                             .send({ amount: -1, to_user: 'b' });
         expect(res.statusCode).toBe(400);
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 404 status code if transfer destination username does not exists', async () => {
@@ -153,6 +156,6 @@ export default function transfer_test(){
                             .set('x-auth-token', validToken1)
                             .send({ amount: 10, to_user: 'c' });
         expect(res.statusCode).toBe(404);
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     })
 }

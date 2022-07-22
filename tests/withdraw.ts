@@ -5,8 +5,10 @@ import request from "supertest";
 import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import Withdrawal from "../src/models/db/withdrawal";
+import Transaction from "../src/models/db/transaction";
 
 const userRepository = AppDataSource.getRepository(User);
+const transactionRepository = AppDataSource.getRepository(Transaction);
 const withdrawalRepository = AppDataSource.getRepository(Withdrawal);
 
 export default function withdraw_test(){
@@ -33,6 +35,7 @@ export default function withdraw_test(){
     });
     afterAll(async () => {
         await withdrawalRepository.delete({});
+        await transactionRepository.delete({});
         await userRepository.delete({});
     });
     
@@ -44,18 +47,26 @@ export default function withdraw_test(){
         expect(res.statusCode).toBe(200);
 
         let withdrawal = res.body as Withdrawal;
-        expect(withdrawal.id).toBeTruthy();
-        expect(withdrawal.username).toBe(validLogin.username);
-        expect(withdrawal.amount == 10).toBe(true);
-        expect(withdrawal.request_on).toBeTruthy();
+        expect(withdrawal.transactionId).toBeTruthy();
+        expect(withdrawal.transaction.user.username).toBe(validLogin.username);
+        expect(withdrawal.transaction.amount == 10).toBe(true);
+        expect(withdrawal.transaction.made_on).toBeTruthy();
         expect(withdrawal.is_approved).toBe(false);
 
-        withdrawal = await withdrawalRepository.findOneBy({ username: validLogin.username }) as Withdrawal;
+        withdrawal = await withdrawalRepository.findOne({
+            where: {
+                transactionId: withdrawal.transactionId
+            }, relations: {
+                transaction: {
+                    user: true
+                }
+            }
+        }) as Withdrawal;
         expect(withdrawal).toBeTruthy();
-        expect(withdrawal.id).toBeTruthy();
-        expect(withdrawal.username).toBe(validLogin.username);
-        expect(withdrawal.amount == 10).toBe(true);
-        expect(withdrawal.request_on).toBeTruthy();
+        expect(withdrawal.transaction.id).toBeTruthy();
+        expect(withdrawal.transaction.user.username).toBe(validLogin.username);
+        expect(withdrawal.transaction.amount == 10).toBe(true);
+        expect(withdrawal.transaction.made_on).toBeTruthy();
         expect(withdrawal.is_approved).toBe(false);
     });
 
@@ -65,7 +76,7 @@ export default function withdraw_test(){
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(401);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if no amount is provided', async () => {
@@ -75,7 +86,7 @@ export default function withdraw_test(){
                             .send();
         expect(res.statusCode).toBe(400);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if amount is invalid (negative)', async () => {
@@ -85,6 +96,6 @@ export default function withdraw_test(){
                             .send({ amount: -1 });
         expect(res.statusCode).toBe(400);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 }

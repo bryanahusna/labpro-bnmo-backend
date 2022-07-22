@@ -1,12 +1,15 @@
 import express from 'express';
 import Joi from 'joi';
+import { QueryFailedError } from 'typeorm';
 
 import AppDataSource from '../db';
 import Deposit from '../models/db/deposit';
+import Transaction, { TransactionType } from '../models/db/transaction';
+import User from '../models/db/user';
 import JWTContent from '../models/JWTContent';
 
 const router = express.Router();
-const depositRepository = AppDataSource.getRepository(Deposit);
+const userRepository = AppDataSource.getRepository(User);
 
 router.post('/', async (req, res) => {
     const jwtcontent = res.locals.jwtcontent as JWTContent;
@@ -17,10 +20,22 @@ router.post('/', async (req, res) => {
     const { error } = schema.validate(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
-    let deposit = req.body as Deposit;
-    deposit.username = jwtcontent.username;
+    const user = await userRepository.findOneBy({ username: jwtcontent.username });
+    if(!user) return res.status(404).send('username not found');
 
-    deposit = await depositRepository.save(deposit);
+    let transaction = new Transaction();
+    transaction.amount = req.body.amount;
+    transaction.user = user;
+    transaction.type = TransactionType.Deposit;
+
+    let deposit = new Deposit();
+    await AppDataSource.transaction(async (TEM) => {
+        transaction = await TEM.save(transaction);
+        deposit.transactionId = transaction.id;
+        deposit.transaction = transaction;
+        deposit = await TEM.save(deposit);
+    });
+
     res.send(deposit);
 });
 

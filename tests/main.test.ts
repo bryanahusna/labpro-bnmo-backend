@@ -7,8 +7,9 @@ import register_test from "./register";
 import transfer_test from "./transfer";
 import verify_test from "./verify";
 import withdraw_test from "./withdraw";
+import history_test from "./history";
 
-jest.setTimeout(20000);
+jest.setTimeout(5000);
 afterAll(async () => {
     server.close();
     if(AppDataSource.isInitialized)
@@ -26,3 +27,4 @@ describe('Deposit', deposit_test);
 describe('Withdraw', withdraw_test);
 describe('Transfer', transfer_test);
 describe('Approve', approve_test);
+describe('History', history_test);

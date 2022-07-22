@@ -4,10 +4,13 @@ import Joi from 'joi';
 import AppDataSource from '../db';
 import JWTContent from '../models/JWTContent';
 import Withdrawal from '../models/db/withdrawal';
+import User from '../models/db/user';
+import Transaction, { TransactionType } from '../models/db/transaction';
 
 const router = express.Router();
+const userRepository = AppDataSource.getRepository(User);
+const withdrawalRepository = AppDataSource.getRepository(Withdrawal);
 
-const depositRepository = AppDataSource.getRepository(Withdrawal);
 router.post('/', async (req, res) => {
     const jwtcontent = res.locals.jwtcontent as JWTContent;
 
@@ -17,10 +20,22 @@ router.post('/', async (req, res) => {
     const { error } = schema.validate(req.body);
     if(error) return res.status(400).send(error.details[0].message);
     
-    let withdrawal = req.body as Withdrawal;
-    withdrawal.username = jwtcontent.username;
+    const user = await userRepository.findOneBy({ username: jwtcontent.username });
+    if(!user) return res.status(404).send('username not found');
 
-    withdrawal = await depositRepository.save(withdrawal);
+    let transaction = new Transaction();
+    transaction.amount = req.body.amount;
+    transaction.user = user;
+    transaction.type = TransactionType.Withdrawal;
+
+    let withdrawal = new Withdrawal();
+    await AppDataSource.transaction(async (TEM) => {
+        transaction = await TEM.save(transaction);
+        withdrawal.transactionId = transaction.id;
+        withdrawal.transaction = transaction;
+        withdrawal = await TEM.save(withdrawal);
+    });
+
     res.send(withdrawal);
 });
 

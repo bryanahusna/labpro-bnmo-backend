@@ -9,6 +9,7 @@ import withdraw from './routes/withdraw';
 import transfer from './routes/transfer';
 import approve from './routes/approve';
 import verify from './routes/verify';
+import history from './routes/history';
 
 import auth from './middlewares/auth';
 
@@ -25,7 +26,7 @@ app.use('/api/withdraw', auth, withdraw);
 app.use('/api/transfer', auth, transfer);
 app.use('/api/approve', auth, approve);
 app.use('/api/verify', auth, verify);
-
+app.use('/api/history', auth, history);
 
 const server = app.listen(3000, () => {
     console.log('Application listening at port 3000');

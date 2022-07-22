@@ -5,8 +5,10 @@ import request from "supertest";
 import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import Deposit from "../src/models/db/deposit";
+import Transaction from "../src/models/db/transaction";
 
 const userRepository = AppDataSource.getRepository(User);
+const transactionRepository = AppDataSource.getRepository(Transaction);
 const depositRepository = AppDataSource.getRepository(Deposit);
 
 export default function deposit_test(){
@@ -33,6 +35,7 @@ export default function deposit_test(){
     });
     afterAll(async () => {
         await depositRepository.delete({});
+        await transactionRepository.delete({});
         await userRepository.delete({});
     });
     
@@ -44,18 +47,26 @@ export default function deposit_test(){
         expect(res.statusCode).toBe(200);
 
         let deposit = res.body as Deposit;
-        expect(deposit.id).toBeTruthy();
-        expect(deposit.username).toBe(validLogin.username);
-        expect(deposit.amount == 10).toBe(true);
-        expect(deposit.request_on).toBeTruthy();
+        expect(deposit.transaction.id).toBeTruthy();
+        //expect(deposit..username).toBe(validLogin.username);
+        expect(deposit.transaction.amount == 10).toBe(true);
+        expect(deposit.transaction.made_on).toBeTruthy();
         expect(deposit.is_approved).toBe(false);
 
-        deposit = await depositRepository.findOneBy({ username: validLogin.username }) as Deposit;
+        deposit = await depositRepository.findOne({
+            where: {
+                transactionId: deposit.transactionId
+            }, relations: {
+                transaction: {
+                    user: true
+                }
+            }
+        }) as Deposit;
         expect(deposit).toBeTruthy();
-        expect(deposit.id).toBeTruthy();
-        expect(deposit.username).toBe(validLogin.username);
-        expect(deposit.amount == 10).toBe(true);
-        expect(deposit.request_on).toBeTruthy();
+        expect(deposit.transaction.id).toBeTruthy();
+        expect(deposit.transaction.user.username).toBe(validLogin.username);
+        expect(deposit.transaction.amount == 10).toBe(true);
+        expect(deposit.transaction.made_on).toBeTruthy();
         expect(deposit.is_approved).toBe(false);
     });
 
@@ -65,7 +76,7 @@ export default function deposit_test(){
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(401);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if no amount is provided', async () => {
@@ -75,7 +86,7 @@ export default function deposit_test(){
                             .send();
         expect(res.statusCode).toBe(400);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 
     it('should return 400 status code if amount is invalid (negative)', async () => {
@@ -85,6 +96,6 @@ export default function deposit_test(){
                             .send({ amount: -1 });
         expect(res.statusCode).toBe(400);
 
-        expect(res.body.id).toBeFalsy();
+        expect(res.body.transactionId).toBeFalsy();
     });
 }

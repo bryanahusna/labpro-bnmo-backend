@@ -23,7 +23,9 @@ router.post('/', async (req, res) => {
     if(error) return res.status(400).send(error.details[0].message);
 
     const checkDb = await userRepository.findOneBy({ username: user.username });
-    if(checkDb) return res.status(409).send('username already exists');
+    if(checkDb){
+        return res.status(409).send('username already exists');
+    }
 
     const hash_salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, hash_salt);

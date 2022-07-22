@@ -4,13 +4,14 @@ import Joi from 'joi';
 import AppDataSource from '../db';
 import Deposit from '../models/db/deposit';
 import JWTContent from '../models/JWTContent';
-import { TransactionType } from '../models/transaction';
 import User from '../models/db/user';
 import Withdrawal from '../models/db/withdrawal';
+import Transaction, { TransactionType } from '../models/db/transaction';
 
 const router = express.Router();
 
 const userRepository = AppDataSource.getRepository(User);
+const transactionRepository = AppDataSource.getRepository(Transaction);
 const depositRepository = AppDataSource.getRepository(Deposit);
 const withdrawalRepository = AppDataSource.getRepository(Withdrawal);
 
@@ -20,44 +21,45 @@ router.post('/', async (req, res) => {
     if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin');
 
     const schema = Joi.object({
-        transaction_type: Joi.string().min(1).required(),
         transaction_id: Joi.number().positive().required()
     });
     const { error } = schema.validate(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    if(req.body.transaction_type == TransactionType.Deposit){
-        const deposit = await depositRepository.findOneBy({ id: req.body.transaction_id });
-        if(!deposit) return res.status(400).send('Invalid transaction id');
+    const transaction: Transaction | null = await transactionRepository.findOne({ where: { id: req.body.transaction_id }, relations: { user: true } });
+    if(!transaction) return res.status(404).send('Transaction with the given id not found');
+    if(!transaction.user) return res.status(404).send('User does not exists');
 
-        const user = await userRepository.findOneBy({ username: deposit?.username });
-        if(!user) return res.status(400).send('Invalid username');
+    const user = transaction.user;
 
-        user.balance += deposit.amount;
+    if(transaction.type == TransactionType.Deposit){
+        const deposit = await depositRepository.findOne({ where: { transactionId: transaction.id } });
+        if(!deposit) return res.status(404).send('Deposit with the given id not found');
+
+        user.balance += transaction.amount;
         deposit.is_approved = true;
         deposit.approved_on = new Date();
         await AppDataSource.transaction(async (TEM) => {
             await TEM.save(user);
             await TEM.save(deposit);
         });
-        
+        transaction.user.password = '';
+        deposit.transaction = transaction;
         return res.send(deposit);
 
-    } else if(req.body.transaction_type == TransactionType.Withdrawal){
-        const withdrawal = await withdrawalRepository.findOneBy({ id: req.body.transaction_id });
-        if(!withdrawal) return res.status(400).send('Invalid transaction id');
+    } else if(transaction.type == TransactionType.Withdrawal){
+        const withdrawal = await withdrawalRepository.findOne({ where: { transactionId: transaction.id } });
+        if(!withdrawal) return res.status(404).send('Withdrawal with the given id not found');
 
-        const user = await userRepository.findOneBy({ username: withdrawal?.username });
-        if(!user) return res.status(400).send('Invalid username');
-
-        user.balance -= withdrawal.amount;
+        user.balance -= transaction.amount;
         withdrawal.is_approved = true;
         withdrawal.approved_on = new Date();
         await AppDataSource.transaction(async (TEM) => {
             await TEM.save(user);
             await TEM.save(withdrawal);
         });
-
+        transaction.user.password = '';
+        withdrawal.transaction = transaction;
         return res.send(withdrawal);
 
     } else {

@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm"
-import Transfer from "./transfer";
+import Transaction from "./transaction";
 
 @Entity()
 export default class User {
@@ -30,9 +30,9 @@ export default class User {
     @Column({ default: false })
     is_admin!: boolean;
 
-    @OneToMany(() => Transfer, (transfer) => transfer.from_user)
-    out_transfers!: Transfer[];
+    @OneToMany(() => Transaction, (transaction) => transaction.user)
+    transactions!: Transaction[];
 
-    @OneToMany(() => Transfer, (transfer) => transfer.to_user)
-    in_transfers!: Transfer[];
+    //@OneToMany(() => Transfer, (transfer) => transfer.to_user)
+    //in_transfers!: Transfer[];
 }

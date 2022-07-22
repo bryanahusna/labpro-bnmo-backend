@@ -5,6 +5,7 @@ import AppDataSource from '../db';
 import JWTContent from '../models/JWTContent';
 import Transfer from '../models/db/transfer';
 import User from '../models/db/user';
+import Transaction, { TransactionType } from '../models/db/transaction';
 
 const router = express.Router();
 
@@ -24,25 +25,29 @@ router.post('/', async (req, res) => {
     let to_user = await userRepository.findOneBy({ username: req.body.to_user });
     if(!to_user) return res.status(404).send('Invalid transfer destination\' username');
 
-    let from_user = await userRepository.findOneBy({ username: jwtcontent.username });
-    if(!from_user) return res.status(404).send('Invalid transfer sender\' username');
+    let user = await userRepository.findOneBy({ username: jwtcontent.username });
+    if(!user) return res.status(404).send('Invalid transfer sender\' username');
+
+    let transaction = new Transaction();
+    transaction.user = user;
+    transaction.amount = req.body.amount;
+    transaction.type = TransactionType.Transfer;
 
     let transfer = new Transfer();
-    transfer.from_user = from_user;
     transfer.to_user = to_user;
-    transfer.amount = req.body.amount;
     
-    from_user.balance -= transfer.amount;
-    to_user.balance += transfer.amount;
+    user.balance -= transaction.amount;
+    to_user.balance += transaction.amount;
     
     try{
         await AppDataSource.transaction(async (TEM) => {
-            await TEM.save(from_user);
+            await TEM.save(user);
             await TEM.save(to_user);
+            transaction = await TEM.save(transaction);
+            transfer.transaction = transaction;
             transfer = await TEM.save(transfer);
         });
-        transfer.from_user.password = '';
-        transfer.to_user.password = '';
+        
         return res.send(transfer);
     } catch(err){
         return res.status(404).send('An unknown error occured');

@@ -8,9 +8,10 @@ import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import Deposit from "../src/models/db/deposit";
 import Withdrawal from "../src/models/db/withdrawal";
-import { TransactionType } from "../src/models/transaction";
+import Transaction from "../src/models/db/transaction";
 
 const userRepository = AppDataSource.getRepository(User);
+const transactionRepository = AppDataSource.getRepository(Transaction);
 const depositRepository = AppDataSource.getRepository(Deposit);
 const withdrawalRepository = AppDataSource.getRepository(Withdrawal);
 
@@ -53,19 +54,17 @@ export default function approve_test(){
 
     beforeEach(async () => {
         await userRepository.update({ username: 'a' }, { balance: 100 });
-        deposit = await depositRepository.save({
-            username: 'a',
-            amount: 10
-        });
-        withdrawal = await withdrawalRepository.save({
-            username: 'a',
-            amount: 10
-        });
+        let res = await request(server).post('/api/deposit').set('x-auth-token', customerToken).send({ amount: 10 });
+        deposit = res.body as Deposit;
+
+        res = await request(server).post('/api/withdraw').set('x-auth-token', customerToken).send({ amount: 10 });
+        withdrawal = res.body as Withdrawal;
     });
 
     afterAll(async () => {
         await depositRepository.delete({});
         await withdrawalRepository.delete({});
+        await transactionRepository.delete({});
         await userRepository.delete({});
     });
     
@@ -73,13 +72,13 @@ export default function approve_test(){
         const res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', adminToken)
-                            .send({ transaction_type: TransactionType.Deposit, transaction_id: deposit.id });
+                            .send({ transaction_id: deposit.transaction.id });
         expect(res.statusCode).toBe(200);
 
         deposit = res.body as Deposit;
         expect(deposit.is_approved).toBe(true);
         
-        deposit = await depositRepository.findOneBy({ id: deposit.id }) || new Deposit();
+        deposit = await depositRepository.findOneBy({ transactionId: deposit.transaction.id }) || new Deposit();
         expect(deposit.is_approved).toBe(true);
         expect(deposit.approved_on).toBeTruthy();
 
@@ -91,13 +90,13 @@ export default function approve_test(){
         const res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', adminToken)
-                            .send({ transaction_type: TransactionType.Withdrawal, transaction_id: withdrawal.id });
+                            .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(200);
 
         withdrawal = res.body as Withdrawal;
         expect(withdrawal.is_approved).toBe(true);
 
-        withdrawal = await withdrawalRepository.findOneBy({ id: withdrawal.id }) || new Withdrawal();
+        withdrawal = await withdrawalRepository.findOneBy({ transactionId: withdrawal.transaction.id }) || new Withdrawal();
         expect(withdrawal.is_approved).toBe(true);
         expect(withdrawal.approved_on).toBeTruthy();
 
@@ -109,7 +108,7 @@ export default function approve_test(){
         // No token
         let res = await request(server)
                             .post('/api/approve')
-                            .send({ transaction_type: TransactionType.Withdrawal, transaction_id: withdrawal.id });
+                            .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(401);
         expect(res.body.id).toBeFalsy();
 
@@ -117,7 +116,7 @@ export default function approve_test(){
         res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', 'abc')
-                            .send({ transaction_type: TransactionType.Withdrawal, transaction_id: withdrawal.id });
+                            .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(401);
         expect(res.body.id).toBeFalsy();
 
@@ -126,7 +125,7 @@ export default function approve_test(){
         res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', invalidToken)
-                            .send({ transaction_type: TransactionType.Withdrawal, transaction_id: withdrawal.id });
+                            .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(401);
         expect(res.body.id).toBeFalsy();
     });
@@ -135,7 +134,7 @@ export default function approve_test(){
         const res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', customerToken)
-                            .send({ transaction_type: TransactionType.Deposit, transaction_id: deposit.id });
+                            .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(401);
         expect(res.body.id).toBeFalsy();
     });
@@ -150,19 +149,12 @@ export default function approve_test(){
         expect(res.body.id).toBeFalsy();
     });
 
-    it('should return 400 status code if transaction type or transaction id is invalid', async () => {
-        let res = await request(server)
+    it('should return 404 status code if  transaction id is not found', async () => {
+        const res = await request(server)
                             .post('/api/approve')
                             .set('x-auth-token', adminToken)
-                            .send({ transaction_type: 'invalid type', transaction_id: deposit.id });
-        expect(res.statusCode).toBe(400);
-        expect(res.body.id).toBeFalsy();
-
-        res = await request(server)
-                            .post('/api/approve')
-                            .set('x-auth-token', adminToken)
-                            .send({ transaction_type: TransactionType.Deposit, transaction_id: 1000000 });
-        expect(res.statusCode).toBe(400);
+                            .send({ transaction_id: 1000000 });
+        expect(res.statusCode).toBe(404);
         expect(res.body.id).toBeFalsy();
     });
 }
