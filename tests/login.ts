@@ -6,6 +6,7 @@ import request from "supertest";
 import { DataSource } from "typeorm";
 import User from "../src/models/db/user";
 import AppDataSource from "../src/db";
+import cookieParser from "cookie-parser";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -45,8 +46,9 @@ export default function login_test(){
     
     it('should return auth token if valid username and password is given', async () => {
         const res = await request(server).post('/api/login').send(validLogin);
-
-        const tokenDecoded: any = jwt.decode(res.text);
+        const token = res.get('Set-Cookie')[0].split(';')[0].split('=')[1];
+        
+        const tokenDecoded: any = jwt.decode(token);
         expect(tokenDecoded.username).toBe('a');
         expect(tokenDecoded.is_admin).toBe(false);
     });

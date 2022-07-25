@@ -4,7 +4,7 @@ import appconfig from '../appconfig';
 import JWTContent from '../models/JWTContent';
 
 export default function auth(req: Request, res: Response, next: NextFunction){
-    const token = req.header('x-auth-token') || '';
+    const token = req.cookies['x-auth-token'] || '';
     if(!token) return res.status(401).send('Not logged in');
 
     try{

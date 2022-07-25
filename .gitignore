@@ -1,3 +1,5 @@
 node_modules
 dist
 experimental
+cache-toidr.json
+src/try.ts

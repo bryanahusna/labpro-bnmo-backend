@@ -12,7 +12,7 @@ const userRepository = AppDataSource.getRepository(User);
 router.post('/', async (req, res) => {
     let user = new User();
     Object.assign(user, req.body);
-
+    
     const schema = Joi.object({
         username: Joi.string().max(255).required(),
         password: Joi.string().min(1).required(),

@@ -89,7 +89,7 @@ export default function approve_test(){
     it('should update the withdrawal transaction status and user\'s balance, and return the transaction', async () => {
         const res = await request(server)
                             .post('/api/approve')
-                            .set('x-auth-token', adminToken)
+                            .set('Cookie', [`x-auth-token=${adminToken}`])
                             .send({ transaction_id: withdrawal.transaction.id });
         expect(res.statusCode).toBe(200);
 

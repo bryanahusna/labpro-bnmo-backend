@@ -1,5 +1,7 @@
 import express, { json } from 'express';
 import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 import AppDataSource from './db';
 import register from './routes/register';
@@ -10,6 +12,10 @@ import transfer from './routes/transfer';
 import approve from './routes/approve';
 import verify from './routes/verify';
 import history from './routes/history';
+import me from './routes/me';
+import logout from './routes/logout';
+
+import currency from './routes/ext/currency';
 
 import auth from './middlewares/auth';
 
@@ -17,7 +23,13 @@ const app = express();
 AppDataSource.initialize(); //  initialize database connection
 
 // Middlewares
+app.use(cookieParser());
 app.use(helmet());
+app.use(cors({
+    origin: true, //included origin as true
+    credentials: true, //included credentials as true
+}));
+
 app.use(json());
 app.use('/api/register', register);
 app.use('/api/login', login);
@@ -27,9 +39,13 @@ app.use('/api/transfer', auth, transfer);
 app.use('/api/approve', auth, approve);
 app.use('/api/verify', auth, verify);
 app.use('/api/history', auth, history);
+app.use('/api/me', auth, me);
+app.use('/api/logout', logout);
 
-const server = app.listen(3000, () => {
-    console.log('Application listening at port 3000');
+app.use('/api/ext/currency', currency);
+
+const server = app.listen(3001, () => {
+    console.log('Application listening at port 3001');
 });
 
 // Make sure database connection destroyed when server is closed

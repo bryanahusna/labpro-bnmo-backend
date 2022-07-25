@@ -20,6 +20,7 @@ router.post('/', async (req, res) => {
 
     const user = await userRepository.findOneBy({ username: req.body.username });
     if(!user) return res.status(401).send('Invalid username or password');
+    //if(!user.is_verified) return res.status(401).send('User is not verified yet! Wait for our admin to verify your account');
 
     const passwordValid = await bcrypt.compare(req.body.password, user.password);
     if(!passwordValid) return res.status(401).send('Invalid username or password');
@@ -29,7 +30,13 @@ router.post('/', async (req, res) => {
         is_admin: user.is_admin
     }, appconfig.get('JWT_PRIVATEKEY') || '');
     
-    return res.send(token);
+    res.cookie('x-auth-token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: true
+    });
+
+    return res.send('Login Successful');
 });
 
 export default router;
