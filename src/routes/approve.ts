@@ -21,14 +21,28 @@ router.post('/', async (req, res) => {
     if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin');
 
     const schema = Joi.object({
-        transaction_id: Joi.number().positive().required()
+        transaction_id: Joi.number().positive().required(),
+        approved: Joi.boolean().required()
     });
     const { error } = schema.validate(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
+    
     const transaction: Transaction | null = await transactionRepository.findOne({ where: { id: req.body.transaction_id }, relations: { user: true } });
     if(!transaction) return res.status(404).send('Transaction with the given id not found');
     if(!transaction.user) return res.status(404).send('User does not exists');
+    
+    if(!req.body.approved){
+        if(transaction.type == TransactionType.Deposit){
+            await depositRepository.delete({ transactionId: transaction.id });
+        } else if(TransactionType.Withdrawal){
+            await withdrawalRepository.delete({ transactionId: transaction.id });
+        } else{
+            return res.status(400).send('Invalid transaction type');
+        }
+        await transactionRepository.delete({ id: transaction.id });
+        return res.send('Decline successful');
+    }
 
     const user = transaction.user;
 

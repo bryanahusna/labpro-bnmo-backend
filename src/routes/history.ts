@@ -32,4 +32,21 @@ router.get('/', async (req, res) => {
     res.send(transactions);
 });
 
+router.get('/unapproved', async (req, res) => {
+    const jwtcontent: JWTContent = res.locals.jwtcontent;
+
+    if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin');
+
+    let transactions: Transaction[];
+    let query = transactionRepository.createQueryBuilder("transaction");
+    query.leftJoinAndSelect("transaction.deposit", "deposit")
+             .leftJoinAndSelect("transaction.withdrawal", "withdrawal")
+             .leftJoinAndSelect("transaction.user", "user")
+             .where("deposit.is_approved = false")
+             .orWhere("withdrawal.is_approved = false");
+    transactions = await query.getMany();
+
+    res.send(transactions);
+});
+
 export default router;
