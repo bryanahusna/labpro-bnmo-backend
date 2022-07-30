@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
 
     const user = await userRepository.findOneBy({ username: req.body.username });
     if(!user) return res.status(401).send('Invalid username or password');
-    //if(!user.is_verified) return res.status(401).send('User is not verified yet! Wait for our admin to verify your account');
+    if(!user.is_verified) return res.status(401).send('User is not verified yet! Wait for our admin to verify your account');
 
     const passwordValid = await bcrypt.compare(req.body.password, user.password);
     if(!passwordValid) return res.status(401).send('Invalid username or password');

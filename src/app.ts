@@ -12,6 +12,7 @@ import transfer from './routes/transfer';
 import approve from './routes/approve';
 import verify from './routes/verify';
 import history from './routes/history';
+import users from './routes/users';
 import me from './routes/me';
 import logout from './routes/logout';
 
@@ -41,6 +42,7 @@ app.use('/api/verify', auth, verify);
 app.use('/api/history', auth, history);
 app.use('/api/me', auth, me);
 app.use('/api/logout', logout);
+app.use('/api/users', auth, users);
 
 app.use('/api/ext/currency', currency);
 

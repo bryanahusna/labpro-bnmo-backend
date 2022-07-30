@@ -12,14 +12,20 @@ router.post('/', async (req, res) => {
     if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin');
 
     const schema = Joi.object({
-        username: Joi.string().min(1).required()
+        username: Joi.string().min(1).required(),
+        is_verified: Joi.boolean().required()
     });
     const { error } =  schema.validate(req.body);
     if(error) return res.status(400).send(error.details[0].message);
 
-    await userRepository.update({ username: req.body.username }, { is_verified: true });
-    const user = await userRepository.findOneBy({ username: req.body.username });
-    return res.send(user);
+    if(req.body.is_verified){
+        await userRepository.update({ username: req.body.username }, { is_verified: true });
+        const user = await userRepository.findOneBy({ username: req.body.username });
+        return res.send(user);
+    } else{
+        const del = await userRepository.delete({ username: req.body.username });
+        return res.send(del);
+    }
 });
 
 export default router;
