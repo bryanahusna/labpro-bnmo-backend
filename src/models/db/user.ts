@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm"
 import Transaction from "./transaction";
+import jwt from 'jsonwebtoken';
 
 @Entity()
 export default class User {
@@ -32,7 +33,8 @@ export default class User {
 
     @OneToMany(() => Transaction, (transaction) => transaction.user)
     transactions!: Transaction[];
+}
 
-    //@OneToMany(() => Transfer, (transfer) => transfer.to_user)
-    //in_transfers!: Transfer[];
+export function createJWT(user: User, privateKey: string): string{
+    return jwt.sign({ username: user.username, is_admin: user.is_admin }, privateKey);
 }

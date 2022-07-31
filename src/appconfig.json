@@ -1,4 +1,6 @@
 {
+    "DB_USERNAME": "",
+    "DB_DATABASE": "",
     "DB_PASSWORD": "",
     "JWT_PRIVATEKEY": "",
     "CURRENCY_PRIVATEKEY": ""

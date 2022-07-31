@@ -1,22 +1,12 @@
-import { DataSource } from "typeorm";
-import appconfig from "./appconfig";
-import Deposit from "./models/db/deposit";
-import Transaction from "./models/db/transaction";
-import Transfer from "./models/db/transfer";
-import User from "./models/db/user";
-import Withdrawal from "./models/db/withdrawal";
+import { DataSource, DataSourceOptions } from "typeorm";
+import { datasourceOptions } from "./db";
 
 export default async function synchronizedb(){
-    const AppDataSource = new DataSource({
-        type: "mysql",
-        username: "root",
-        password: appconfig.get("DB_PASSWORD"),
-        database: "bnmo_test",
-        entities: [User, Transaction, Deposit, Withdrawal, Transfer],
-        synchronize: true
-    });
+    const options: DataSourceOptions = { ...datasourceOptions, synchronize: true };
+    const AppDataSource = new DataSource(options);
     await AppDataSource.initialize();
-    console.log('Synchronization succesful');   
+    console.log('Synchronization succesful');
+    await AppDataSource.destroy();
 }
 
 synchronizedb();

@@ -6,12 +6,15 @@ import { server } from '../src/app';
 
 import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
+import createUser, { createVerifiedUser } from './utils/createUser';
+import authCheck from './utils/authCheck';
 
 const userRepository = AppDataSource.getRepository(User);
 
 export default function verify_test(){
-    let adminToken: string;
-    let customerToken: string;
+    let adminCookie: string;
+    let customerCookie: string;
+    let verifiedCustomerCookie: string;
     const customerLogin = {
         username: 'a',
         password: 'a'
@@ -36,22 +39,19 @@ export default function verify_test(){
     }
 
     beforeAll(async () => {
-        const admin = adminRegistration as User;
-        const hash_salt = await bcrypt.genSalt();
-        admin.password = await bcrypt.hash('b', hash_salt)
-        await userRepository.save(admin);
+        await createVerifiedUser(adminRegistration);
 
-        const res = await request(server).post('/api/login').send(adminLogin);
-        adminToken = res.text;
+        let res = await request(server).post('/api/login').send(adminLogin);
+        adminCookie = res.get('Set-Cookie')[0];
+
+        await createVerifiedUser({ username: 'c', password: 'c', foto_ktp: 'c.jpg', name: 'c' });
+
+        res = await request(server).post('/api/login').send({ username: 'c', password: 'c' });
+        
+        verifiedCustomerCookie = res.get('Set-Cookie')[0];
     })
     beforeEach(async () => {
-        const customer = customerRegistration as User;
-        const hash_salt = await bcrypt.genSalt();
-        customer.password = await bcrypt.hash('a', hash_salt)
-        await userRepository.save(customer);
-
-        const res = await request(server).post('/api/login').send(customerLogin);
-        customerToken = res.text;
+        await createUser(customerRegistration);
     });
     afterEach(async () => {
         await userRepository.delete({ username: customerLogin.username });
@@ -63,8 +63,8 @@ export default function verify_test(){
     it('should update user status if valid request is given and the sender is admin', async () => {
         const res = await request(server)
                             .post('/api/verify')
-                            .set('x-auth-token', adminToken)
-                            .send({ username: customerLogin.username });
+                            .set('Cookie', adminCookie)
+                            .send({ username: customerLogin.username, is_verified: true });
         expect(res.statusCode).toBe(200);
 
         let user = res.body as User;
@@ -77,32 +77,13 @@ export default function verify_test(){
     });
 
     it('should return 401 status code if no token is provided, or token is malformed, or token is invalid', async () => {
-        // No token
-        let res = await request(server)
-                            .post('/api/verify')
-                            .send({ username: customerLogin.username });
-        expect(res.statusCode).toBe(401);
-
-        // Malformed token
-        res = await request(server)
-                            .post('/api/verify')
-                            .set('x-auth-token', 'abc')
-                            .send({ username: customerLogin.username });
-        expect(res.statusCode).toBe(401);
-
-        // Invalid token
-        let invalidToken = jwt.sign({ username: 'a', is_admin: true }, 'invalid_key');
-        res = await request(server)
-                            .post('/api/verify')
-                            .set('x-auth-token', invalidToken)
-                            .send({ username: customerLogin.username });
-        expect(res.statusCode).toBe(401);
+        await authCheck(server, '/api/verify', { username: customerLogin.username, is_verified: true });
     });
 
     it('should return 401 status code if user is not an admin', async () => {
         const res = await request(server)
                             .post('/api/verify')
-                            .set('x-auth-token', customerToken)
+                            .set('Cookie', verifiedCustomerCookie)
                             .send({ username: customerLogin.username });
         expect(res.statusCode).toBe(401);
     });
@@ -110,7 +91,7 @@ export default function verify_test(){
     it('should return 400 status code if request is invalid (no username)', async () => {
         const res = await request(server)
                             .post('/api/verify')
-                            .set('x-auth-token', adminToken)
+                            .set('Cookie', adminCookie)
                             .send({ });
         expect(res.statusCode).toBe(400);
     });

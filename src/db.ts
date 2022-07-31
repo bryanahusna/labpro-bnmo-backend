@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { DataSource } from "typeorm";
+import { DataSource, DataSourceOptions } from "typeorm";
 import appconfig from "./appconfig";
 import Deposit from "./models/db/deposit";
 import Transaction from "./models/db/transaction";
@@ -7,12 +7,15 @@ import Transfer from "./models/db/transfer";
 import User from "./models/db/user";
 import Withdrawal from "./models/db/withdrawal";
 
-const AppDataSource = new DataSource({
+const datasourceOptions: DataSourceOptions = {
     type: "mysql",
-    username: "root",
+    username: appconfig.get("DB_USERNAME") || "root",
     password: appconfig.get("DB_PASSWORD"),
-    database: "bnmo_test",
+    database: appconfig.get("DB_DATABASE"),
     entities: [User, Transaction, Deposit, Withdrawal, Transfer],
-});
+};
+
+const AppDataSource = new DataSource(datasourceOptions);
 
 export default AppDataSource;
+export {datasourceOptions};

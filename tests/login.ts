@@ -1,26 +1,14 @@
-import "reflect-metadata";
 import jwt from 'jsonwebtoken'
 
 import { server } from "../src/app";
 import request from "supertest";
-import { DataSource } from "typeorm";
 import User from "../src/models/db/user";
 import AppDataSource from "../src/db";
-import cookieParser from "cookie-parser";
+import { createVerifiedUser } from "./utils/createUser";
 
 const userRepository = AppDataSource.getRepository(User);
 
-// beforeAll(async () => {
-//     await AppDataSource.initialize();
-// })
-
-// afterAll(async () => {
-//     await server.close();
-//     //await AppDataSource.destroy();
-// });
-
 export default function login_test(){
-    
     const login: any = {};
     const validLogin = {
         username: 'a',
@@ -38,7 +26,7 @@ export default function login_test(){
     });
 
     beforeAll(async () => {
-        await request(server).post('/api/register').send(validRegistration);
+        await createVerifiedUser(validRegistration);
     });
     afterAll(async () => {
         await userRepository.delete({});
@@ -49,7 +37,8 @@ export default function login_test(){
         const token = res.get('Set-Cookie')[0].split(';')[0].split('=')[1];
         
         const tokenDecoded: any = jwt.decode(token);
-        expect(tokenDecoded.username).toBe('a');
+        
+        expect(tokenDecoded.username).toBe(validLogin.username);
         expect(tokenDecoded.is_admin).toBe(false);
     });
 

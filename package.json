@@ -8,7 +8,7 @@
     "run": "node ./dist/app.js",
     "build-run": "tsc && node ./dist/app.js",
     "test": "jest -c ./jest.unit.json --runInBand",
-    "synchronizedb": "tsc | node ./dist/synchronizedb.js"
+    "synchronizedb": "tsc && node ./dist/synchronizedb.js"
   },
   "keywords": [],
   "author": "",
