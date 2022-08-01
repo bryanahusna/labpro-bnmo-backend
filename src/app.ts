@@ -30,8 +30,9 @@ app.use(cors({
     origin: true, //included origin as true
     credentials: true, //included credentials as true
 }));
-
 app.use(json());
+
+// Routes
 app.use('/api/register', register);
 app.use('/api/login', login);
 app.use('/api/deposit', auth, deposit);
@@ -46,6 +47,7 @@ app.use('/api/users', auth, users);
 
 app.use('/api/ext/currency', currency);
 
+// Start server
 const server = app.listen(3001, () => {
     console.log('Application listening at port 3001');
 });

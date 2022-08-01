@@ -6,33 +6,33 @@ import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import Transfer from "../src/models/db/transfer";
 import Transaction from "../src/models/db/transaction";
+import { createVerifiedUser } from "./utils/createUser";
+import { authCheckPost } from "./utils/authCheck";
 
 const userRepository = AppDataSource.getRepository(User);
 const transactionRepository = AppDataSource.getRepository(Transaction);
 const transferRepository = AppDataSource.getRepository(Transfer);
 
 export default function transfer_test(){
-    let token1: string;
-    let validToken1: string;
-    let token2: string;
-    let validToken2: string;
+    let customerCookie1: string;
+    let customerCookie2: string;
 
-    const user1Login = {
+    const cust1Login = {
         username: 'a',
         password: 'a'
     };
-    const user1Registration = {
+    const cust1Registration = {
         username: 'a',
         password: 'a',
         name: 'a',
         foto_ktp: "a.jpg"
     };
 
-    const user2Login = {
+    const cust2Login = {
         username: 'b',
         password: 'b'
     };
-    const user2Registration = {
+    const cust2Registration = {
         username: 'b',
         password: 'b',
         name: 'b',
@@ -41,17 +41,11 @@ export default function transfer_test(){
 
     
     beforeAll(async () => {
-        await request(server).post('/api/register').send(user1Registration);
-        let res = await request(server).post('/api/login').send(user1Login);
-        validToken1 = res.text;
+        const token1 = await createVerifiedUser(cust1Registration);
+        customerCookie1 = `x-auth-token=${token1}`;
 
-        await request(server).post('/api/register').send(user2Registration);
-        res = await request(server).post('/api/login').send(user2Login);
-        validToken2 = res.text;
-    });
-    beforeEach(async () => {
-        token1 = validToken1;
-        token2 = validToken2;
+        const token2 = await createVerifiedUser(cust2Registration);
+        customerCookie2 = `x-auth-token=${token2}`;
     });
     afterAll(async () => {
         await transferRepository.delete({});
@@ -60,21 +54,21 @@ export default function transfer_test(){
     });
     
     it('should update both users balance and return transfer transaction if valid amount, destination user, and auth token is provided', async () => {
-        await userRepository.update({ username: user1Login.username }, { balance: 100 });
-        await userRepository.update({ username: user2Login.username }, { balance: 100 });
+        await userRepository.update({ username: cust1Login.username }, { balance: 100 });
+        await userRepository.update({ username: cust2Login.username }, { balance: 100 });
 
         const res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
-                            .send({ amount: 10, to_user: user2Login.username });
+                            .set('Cookie', customerCookie1)
+                            .send({ amount: 10, to_user: cust2Login.username });
         if(res.statusCode == 400) console.log(res.text);
         expect(res.statusCode).toBe(200);
 
         let transfer = res.body as Transfer;
         
         expect(transfer.transactionId).toBeTruthy();
-        expect(transfer.transaction.user.username).toBe(user1Login.username);
-        expect(transfer.to_user.username).toBe(user2Login.username);
+        expect(transfer.transaction.user.username).toBe(cust1Login.username);
+        expect(transfer.to_user.username).toBe(cust2Login.username);
         expect(transfer.transaction.amount).toBe(10);
         expect(transfer.transaction.made_on).toBeTruthy();
 
@@ -91,51 +85,36 @@ export default function transfer_test(){
 
         expect(transfer).toBeTruthy();
         expect(transfer.transactionId).toBeTruthy();
-        expect(transfer.transaction.user.username).toBe(user1Login.username);
+        expect(transfer.transaction.user.username).toBe(cust1Login.username);
         expect(transfer.transaction.user.balance).toBe(90);
-        expect(transfer.to_user.username).toBe(user2Login.username);
+        expect(transfer.to_user.username).toBe(cust2Login.username);
         expect(transfer.to_user.balance).toBe(110);
         expect(transfer.transaction.amount).toBe(10);
         expect(transfer.transaction.made_on).toBeTruthy();
     });
 
-    it('should return 401 status code if no token is provided', async () => {
-        const res = await request(server)
-                            .post('/api/transfer')
-                            .send({ amount: 10, to_user: user2Login.username });
-        expect(res.statusCode).toBe(401);
-
-        expect(res.body.transactionId).toBeFalsy();
-    });
-
-    it('should return 401 status code if invalid token is provided', async () => {
-        const res = await request(server)
-                            .post('/api/transfer')
-                            .set('x-auth-token', 'alskjdfasdfkj')
-                            .send({ amount: 10, to_user: user2Login.username });
-        expect(res.statusCode).toBe(401);
-
-        expect(res.body.transactionId).toBeFalsy();
+    it('should return 401 status code if no token is provided, or token is malformed, or token is invalid', async () => {
+        await authCheckPost(server, '/api/transfer', { amount: 10, to_user: cust2Login.username });
     });
 
     it('should return 400 status code if no amount and/or to_user is provided', async () => {
         let res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
+                            .set('Cookie', customerCookie1)
                             .send({ amount: 10 });
         expect(res.statusCode).toBe(400);
         expect(res.body.transactionId).toBeFalsy();
 
         res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
-                            .send({ to_user: user2Login.username });
+                            .set('Cookie', customerCookie1)
+                            .send({ to_user: cust2Login.username });
         expect(res.statusCode).toBe(400);
         expect(res.body.transactionId).toBeFalsy();
 
         res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
+                            .set('Cookie', customerCookie1)
                             .send({});
         expect(res.statusCode).toBe(400);
         expect(res.body.transactionId).toBeFalsy();
@@ -144,7 +123,7 @@ export default function transfer_test(){
     it('should return 400 status code if amount is invalid (negative)', async () => {
         let res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
+                            .set('Cookie', customerCookie1)
                             .send({ amount: -1, to_user: 'b' });
         expect(res.statusCode).toBe(400);
         expect(res.body.transactionId).toBeFalsy();
@@ -153,7 +132,7 @@ export default function transfer_test(){
     it('should return 404 status code if transfer destination username does not exists', async () => {
         let res = await request(server)
                             .post('/api/transfer')
-                            .set('x-auth-token', validToken1)
+                            .set('Cookie', customerCookie1)
                             .send({ amount: 10, to_user: 'c' });
         expect(res.statusCode).toBe(404);
         expect(res.body.transactionId).toBeFalsy();

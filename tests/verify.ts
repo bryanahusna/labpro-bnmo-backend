@@ -1,13 +1,11 @@
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 
 import { server } from '../src/app';
 
 import AppDataSource from "../src/db";
 import User from "../src/models/db/user";
 import createUser, { createVerifiedUser } from './utils/createUser';
-import authCheck from './utils/authCheck';
+import { authCheckPost } from './utils/authCheck';
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -77,7 +75,7 @@ export default function verify_test(){
     });
 
     it('should return 401 status code if no token is provided, or token is malformed, or token is invalid', async () => {
-        await authCheck(server, '/api/verify', { username: customerLogin.username, is_verified: true });
+        await authCheckPost(server, '/api/verify', { username: customerLogin.username, is_verified: true });
     });
 
     it('should return 401 status code if user is not an admin', async () => {
