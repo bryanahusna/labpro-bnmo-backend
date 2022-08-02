@@ -43,7 +43,8 @@ router.get('/unapproved', async (req, res) => {
              .leftJoinAndSelect("transaction.withdrawal", "withdrawal")
              .leftJoinAndSelect("transaction.user", "user")
              .where("deposit.is_approved = false")
-             .orWhere("withdrawal.is_approved = false");
+             .orWhere("withdrawal.is_approved = false")
+             .orderBy('transaction.made_on', "DESC");
     transactions = await query.getMany();
 
     res.send(transactions);
