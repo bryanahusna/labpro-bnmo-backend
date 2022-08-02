@@ -13,6 +13,7 @@ const datasourceOptions: DataSourceOptions = {
     password: appconfig.get("DB_PASSWORD"),
     database: appconfig.get("DB_DATABASE"),
     entities: [User, Transaction, Deposit, Withdrawal, Transfer],
+    timezone: "Z"
 };
 
 const AppDataSource = new DataSource(datasourceOptions);
