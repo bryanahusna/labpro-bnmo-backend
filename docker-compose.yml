@@ -1,0 +1,4 @@
+# Bingung euy, deket deadline
+# Perlu setting environment variable rahasia, nanti kelihatan di docker filenya(?)
+# Dideploy manual aja
+# Jangan lupa copy src/appconfig.json ke hasil build
