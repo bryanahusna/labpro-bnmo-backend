@@ -12,6 +12,8 @@ const datasourceOptions: DataSourceOptions = {
     username: appconfig.get("DB_USERNAME") || "root",
     password: appconfig.get("DB_PASSWORD"),
     database: appconfig.get("DB_DATABASE"),
+    host: appconfig.get("DB_HOST"),
+    port: parseInt(appconfig.get("DB_PORT") || ''),
     entities: [User, Transaction, Deposit, Withdrawal, Transfer],
     timezone: "Z"
 };

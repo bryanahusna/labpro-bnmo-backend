@@ -1,7 +1,10 @@
 {
+    "PORT": "",
     "DB_USERNAME": "",
     "DB_DATABASE": "",
     "DB_PASSWORD": "",
+    "DB_HOST": "",
+    "DB_PORT": "",
     "JWT_PRIVATEKEY": "",
     "CURRENCY_PRIVATEKEY": ""
 }

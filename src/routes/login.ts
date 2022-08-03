@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
     res.cookie('x-auth-token', token, {
         httpOnly: true,
         secure: true,
-        sameSite: true
+        sameSite: 'none'
     });
 
     return res.send('Login Successful');

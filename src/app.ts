@@ -19,6 +19,7 @@ import logout from './routes/logout';
 import currency from './routes/ext/currency';
 
 import auth from './middlewares/auth';
+import appconfig from './appconfig';
 
 const app = express();
 AppDataSource.initialize(); //  initialize database connection
@@ -48,8 +49,8 @@ app.use('/api/users', auth, users);
 app.use('/api/ext/currency', currency);
 
 // Start server
-const server = app.listen(3001, () => {
-    console.log('Application listening at port 3001');
+const server = app.listen(appconfig.get('PORT'), () => {
+    console.log(`Application listening at port ${appconfig.get('PORT')}`);
 });
 
 // Make sure database connection destroyed when server is closed
