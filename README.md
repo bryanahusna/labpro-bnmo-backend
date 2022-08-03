@@ -1,5 +1,6 @@
 # BNMO Backend
-Backend untuk aplikasi BNMO
+Backend untuk aplikasi BNMO. Otentikasi menggunakan JWT yang disimpan pada cookie dengan atribut httpOnly. Konversi mata uang menggunakan API https://exchangeratesapi.io/.
+
 ## Cara Menjalankan
 ### Development
 Pastikan sudah memiliki npm, node, dan TypeScript (tsc)
