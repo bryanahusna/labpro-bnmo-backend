@@ -11,6 +11,10 @@ Pastikan sudah memiliki npm, node, dan TypeScript (tsc)
 6. Sebelum menjalankan backend, sinkronisasi terlebih dahulu database (membuat table, foreign key, dll.) dengan menjalankan `npm run synchronizedb`
 7. Jalankan backend dengan menjalankan `npm run run`. Server akan berjalan dan bisa menerima request.
 
+### Deployment
+1. Secara umum mirip dengan Development.
+2. Setelah di-build (langkah 1-5), file yang terdapat dalam folder `dist` bisa dideploy. Jangan lupa sinkronisasi database terlebih dahulu. Selain itu, file `src/appconfig.json` tidak tersalin bersama kompilasi sehingga `harus` disalin sendiri ke folder yang sama dengan `app.js` hasil kompilasi, jika tidak akan terjadi `error`.
+
 ## Design Pattern
 - Observer. Tiap middleware dan endpoint mendaftarkan diri dan nantinya akan dipanggil (muncul event) jika terdapat request yang sesuai dengan middleware atau endpoint tersebut.
 - Singleton. Database merupakan singleton, semua transaksi melewati satu objek tunggal ini (Node men-cache tiap import dari db).
