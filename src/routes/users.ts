@@ -11,13 +11,13 @@ const userRepository = AppDataSource.getRepository(User);
 router.get('/', async (req, res) => {
     const jwtcontent: JWTContent = res.locals.jwtcontent;
 
-    if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin');
+    if(!jwtcontent.is_admin) return res.status(401).send('Only accessible to admin')
 
     let where: FindOptionsWhere<User> = {};
     if(req.query.is_verified?.toString().toLowerCase() == 'true'){
-        where = { is_verified: true};
+        where = { is_verified: true };
     } else if(req.query.is_verified?.toString().toLowerCase() == 'false'){
-        where = { is_verified: false};
+        where = { is_verified: false };
     }
 
     const users = await userRepository.find({
@@ -27,13 +27,32 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:username', async (req, res) => {
+    const jwtcontent: JWTContent = res.locals.jwtcontent;
     const username = req.params.username;
+
+    if(!jwtcontent.is_admin){
+        if(!username) return res.status(400).send('Username must be provided');
+
+        const users = await userRepository.find({
+            where: { username },
+            select: { username: true, name: true }
+        });
+        return res.send(users);
+    }
+
+    let where: FindOptionsWhere<User> = {};
+    if(req.query.is_verified?.toString().toLowerCase() == 'true'){
+        where = { is_verified: true, username };
+    } else if(req.query.is_verified?.toString().toLowerCase() == 'false'){
+        where = { is_verified: false, username};
+    } else{
+        where = { username }
+    }
+
     const users = await userRepository.find({
-        where: { username },
-        select: { username: true, name: true }
+        where: where
     });
     res.send(users);
 });
-
 
 export default router;

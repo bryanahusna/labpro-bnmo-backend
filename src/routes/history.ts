@@ -50,4 +50,23 @@ router.get('/unapproved', async (req, res) => {
     res.send(transactions);
 });
 
+router.get('/count', async (req, res) => {
+    const jwtcontent: JWTContent = res.locals.jwtcontent;
+
+    let query = transactionRepository.createQueryBuilder("transaction");
+    query.leftJoinAndSelect("transaction.deposit", "deposit")
+             .leftJoinAndSelect("transaction.withdrawal", "withdrawal")
+             .leftJoinAndSelect("transaction.transfer", "transfer")
+             .leftJoinAndSelect("transaction.user", "user")
+             .leftJoinAndSelect("transfer.to_user", "to_user")
+    if(!jwtcontent.is_admin){
+        query.where("user.username = :username", { username: jwtcontent.username })
+             .orWhere("to_user.username = :tousername", { tousername: jwtcontent.username });
+    }
+    query.orderBy('transaction.made_on', "DESC")
+    const count = { count: await query.getCount() };
+    
+    res.send(count);
+})
+
 export default router;
